@@ -25,7 +25,6 @@ const app = new Elysia()
   .use(paymentRoutes)
   .use(companyRoutes);
 
-// Only listen in development or when not in Vercel
 if (process.env.VERCEL !== "1") {
   app.listen(process.env.PORT || 3000, async ({ hostname, port }) => {
     console.log(`Server is running at ${hostname}:${port}`);
