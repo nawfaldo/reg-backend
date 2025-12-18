@@ -23,8 +23,11 @@ const app = new Elysia()
   .use(dts("./src/index.ts"))
   .use(meRoutes)
   .use(paymentRoutes)
-  .use(companyRoutes)
-  .listen(process.env.PORT || 3000, async ({ hostname, port }) => {
+  .use(companyRoutes);
+
+// Only listen in development or when not in Vercel
+if (process.env.VERCEL !== "1") {
+  app.listen(process.env.PORT || 3000, async ({ hostname, port }) => {
     console.log(`Server is running at ${hostname}:${port}`);
 
     if (process.env.NODE_ENV === "development") {
@@ -42,5 +45,7 @@ const app = new Elysia()
       }
     }
   });
+}
 
 export type App = typeof app;
+export { app };

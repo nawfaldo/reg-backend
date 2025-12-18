@@ -53,11 +53,13 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     },
   },
+  baseURL: process.env.BETTER_AUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://reg-backend-psi.vercel.app"),
   trustedOrigins: [
     "http://localhost:5173",
     process.env.FRONTEND_URL || "",
     "https://reg-frontend-seven.vercel.app",
-    process.env.BETTER_AUTH_URL || ""
+    process.env.BETTER_AUTH_URL || "",
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ""
   ].filter(Boolean),
   advanced: {
     defaultCookieAttributes: {

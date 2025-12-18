@@ -1,0 +1,18 @@
+{
+  "buildCommand": "bun run build",
+  "devCommand": "bun run dev",
+  "installCommand": "bun install",
+  "framework": null,
+  "functions": {
+    "api/index.ts": {
+      "runtime": "bun@1.1.0"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ]
+}
+
