@@ -4,7 +4,7 @@ import { auth } from "./auth";
 import { prisma } from "../db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://reg-frontend-seven.vercel.app";
 
 // Helper to safely get subscription period end date
 function getSubscriptionPeriodEnd(subscription: any): Date {

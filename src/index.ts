@@ -9,7 +9,7 @@ import { meRoutes } from "./api/me";
 const app = new Elysia()
   .use(
     cors({
-      origin: "http://localhost:5173",
+      origin: "https://reg-frontend-seven.vercel.app",
       credentials: true,
     }),
   )
