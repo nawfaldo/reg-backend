@@ -3,8 +3,15 @@ import Stripe from "stripe";
 import { auth } from "./auth";
 import { prisma } from "../db";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-const FRONTEND_URL = process.env.FRONTEND_URL || "https://reg-frontend-seven.vercel.app";
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+if (!STRIPE_SECRET_KEY) {
+  throw new Error("STRIPE_SECRET_KEY environment variable is not set");
+}
+if (!STRIPE_SECRET_KEY.startsWith("sk_")) {
+  throw new Error(`Invalid STRIPE_SECRET_KEY format. Stripe keys should start with "sk_", but got: ${STRIPE_SECRET_KEY.substring(0, 10)}...`);
+}
+const stripe = new Stripe(STRIPE_SECRET_KEY);
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // Helper to safely get subscription period end date
 function getSubscriptionPeriodEnd(subscription: any): Date {
@@ -42,29 +49,35 @@ function getSubscriptionPeriodEnd(subscription: any): Date {
 
 export const paymentRoutes = new Elysia({ prefix: "/api/payment" })
   .post("/create-checkout-session", async ({ request, body, set }) => {
-    const session = await auth.api.getSession({ headers: request.headers });
-    
-    if (!session || !session.user) {
-      set.status = 401;
-      return { error: "Unauthorized" };
-    }
+    try {
+      const session = await auth.api.getSession({ headers: request.headers });
+      
+      if (!session || !session.user) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
 
-    const userId = session.user.id;
-    const userEmail = session.user.email;
-    const { priceId, companyId } = body as { priceId: string; companyId?: string };
+      const userId = session.user.id;
+      const userEmail = session.user.email;
+      const { priceId, companyId } = body as { priceId: string; companyId?: string };
 
-    // Get or create company for user
-    let company;
-    if (companyId) {
-      company = await prisma.company.findFirst({
-        where: { 
-          id: companyId,
-          users: {
-            some: { userId: userId }
-          }
-        },
-      });
-    } else {
+      if (!priceId) {
+        set.status = 400;
+        return { error: "Price ID is required" };
+      }
+
+      // Get or create company for user
+      let company;
+      if (companyId) {
+        company = await prisma.company.findFirst({
+          where: { 
+            id: companyId,
+            users: {
+              some: { userId: userId }
+            }
+          },
+        });
+      } else {
       // Get first company or create default
       const userCompanies = await prisma.userCompany.findMany({
         where: { userId },
@@ -101,43 +114,48 @@ export const paymentRoutes = new Elysia({ prefix: "/api/payment" })
       }
     }
 
-    if (!company) {
-      set.status = 400;
-      return { error: "Company not found" };
-    }
-    
-    let customerId = company.stripeCustomerId;
+      if (!company) {
+        set.status = 400;
+        return { error: "Company not found" };
+      }
+      
+      let customerId = company.stripeCustomerId;
 
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: userEmail,
-        metadata: { companyId: company.id, userId: userId },
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: userEmail,
+          metadata: { companyId: company.id, userId: userId },
+        });
+        customerId = customer.id;
+
+        await prisma.company.update({
+          where: { id: company.id },
+          data: { stripeCustomerId: customerId },
+        });
+      }
+
+      const checkoutSession = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: "subscription",
+        allow_promotion_codes: true,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        success_url: `${FRONTEND_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
+        cancel_url: `${FRONTEND_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
+        metadata: { userId: userId, companyId: company.id },
       });
-      customerId = customer.id;
 
-      await prisma.company.update({
-        where: { id: company.id },
-        data: { stripeCustomerId: customerId },
-      });
+      return { url: checkoutSession.url };
+    } catch (error: any) {
+      console.error("Error creating checkout session:", error);
+      set.status = 500;
+      return { error: error.message || "Failed to create checkout session" };
     }
-
-    const checkoutSession = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: "subscription",
-      allow_promotion_codes: true,
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      success_url: `${FRONTEND_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
-      cancel_url: `${FRONTEND_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
-      metadata: { userId: userId, companyId: company.id },
-    });
-
-    return { url: checkoutSession.url };
   })
 
   .post("/webhook", async ({ request, set }) => {

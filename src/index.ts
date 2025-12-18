@@ -9,11 +9,7 @@ import { meRoutes } from "./api/me";
 const app = new Elysia()
   .use(
     cors({
-      origin: [
-        "http://localhost:5173", 
-        process.env.FRONTEND_URL || "", 
-        "https://reg-frontend-seven.vercel.app"
-      ].filter(Boolean),
+      origin: ["http://localhost:5173"], 
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"], 
@@ -23,10 +19,8 @@ const app = new Elysia()
   .use(dts("./src/index.ts"))
   .use(meRoutes)
   .use(paymentRoutes)
-  .use(companyRoutes);
-
-if (process.env.VERCEL !== "1") {
-  app.listen(process.env.PORT || 3000, async ({ hostname, port }) => {
+  .use(companyRoutes)
+  .listen(process.env.PORT || 3000, async ({ hostname, port }) => {
     console.log(`Server is running at ${hostname}:${port}`);
 
     if (process.env.NODE_ENV === "development") {
@@ -44,7 +38,5 @@ if (process.env.VERCEL !== "1") {
       }
     }
   });
-}
 
 export type App = typeof app;
-export { app };

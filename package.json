@@ -5,8 +5,6 @@
       "test": "echo \"Error: no test specified\" && exit 1",
       "dev": "bun run --watch src/index.ts",
       "seed": "bunx prisma db seed",
-      "build": "true",
-      "postinstall": "prisma generate",
       "migrate:turso": "bun run scripts/apply-migrations.ts"
   },
   "prisma": {
