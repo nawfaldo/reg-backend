@@ -56,7 +56,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:5173", 
     process.env.FRONTEND_URL || "", 
-    "https://reg-backend-psi.vercel.app"
+    "reg-frontend-seven.vercel.app"
   ].filter(Boolean),
   advanced: {
     defaultCookieAttributes: {
