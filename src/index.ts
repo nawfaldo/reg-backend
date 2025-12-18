@@ -11,34 +11,18 @@ const app = new Elysia()
     cors({
       origin: [
         "http://localhost:5173", 
-        process.env.FRONTEND_URL || "",
+        process.env.FRONTEND_URL || "", 
+        "https://reg-frontend-seven.vercel.app"
       ].filter(Boolean),
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"], 
     }),
   )
   .mount(auth.handler)
   .use(dts("./src/index.ts"))
   .use(meRoutes)
   .use(paymentRoutes)
-  .use(companyRoutes)
-  .listen(process.env.PORT || 3000, async ({ hostname, port }) => {
-    console.log(`Server is running at ${hostname}:${port}`);
+  .use(companyRoutes);
 
-    if (process.env.NODE_ENV === "development") {
-      try {
-        console.log("Syncing types to Frontend...");
-
-        const req = await fetch(`http://${hostname}:${port}/server.d.ts`);
-        const typeDefinition = await req.text();
-
-        await Bun.write("../website/src/lib/server.d.ts", typeDefinition);
-
-        console.log("Types synced successfully!");
-      } catch (e) {
-        console.error("❌ Failed to sync types:", e);
-      }
-    }
-  });
-
-export type App = typeof app;
+export default app.fetch;
