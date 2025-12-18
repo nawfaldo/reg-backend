@@ -2,8 +2,37 @@ import { Elysia, t } from "elysia";
 import { auth } from "./auth";
 import { prisma } from "../db";
 
+async function hasPermission(
+  userId: string,
+  companyId: string,
+  permissionName: string
+): Promise<boolean> {
+  const userCompany = await prisma.userCompany.findFirst({
+    where: {
+      userId,
+      companyId,
+    },
+    include: {
+      role: {
+        include: {
+          permissions: true,
+        },
+      },
+    },
+  });
+
+  if (!userCompany) return false;
+
+  if (userCompany.role.name === "owner") return true;
+
+  const hasPermission = userCompany.role.permissions.some(
+    (perm) => perm.name === permissionName
+  );
+
+  return hasPermission;
+}
+
 export const companyRoutes = new Elysia({ prefix: "/api/company" })
-  // GET /api/company - Get all companies for current user
   .get("/", async ({ request, set }) => {
     const session = await auth.api.getSession({ headers: request.headers });
     
@@ -19,6 +48,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
           select: {
             id: true,
             name: true,
+            image: true,
             userId: true,
             stripeSubscriptionId: true,
             stripePriceId: true,
@@ -28,9 +58,14 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
           },
         },
         role: {
-          select: {
-            id: true,
-            name: true,
+          include: {
+            permissions: {
+              select: {
+                id: true,
+                name: true,
+                desc: true,
+              },
+            },
           },
         },
       },
@@ -42,6 +77,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         ...uc.company,
         isOwner: uc.role.name === "owner",
         role: uc.role.name,
+        permissions: uc.role.permissions.map((p: { name: string }) => p.name),
         hasActiveSubscription: uc.company.stripeSubscriptionId && 
           uc.company.stripeCurrentPeriodEnd && 
           new Date(uc.company.stripeCurrentPeriodEnd) > new Date(),
@@ -49,7 +85,6 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
     };
   })
 
-  // GET /api/company/permissions - Get all permissions
   .get("/permissions", async ({ request, set }) => {
     const session = await auth.api.getSession({ headers: request.headers });
     
@@ -65,7 +100,6 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
     return { permissions };
   })
 
-  // GET /api/company/users/search?email=... - Search user by email
   .get("/users/search", async ({ request, query, set }) => {
     const session = await auth.api.getSession({ headers: request.headers });
     
@@ -99,6 +133,87 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
     return { user };
   })
 
+  .get("/name/:name", async ({ request, params, set }) => {
+    const session = await auth.api.getSession({ headers: request.headers });
+    
+    if (!session || !session.user) {
+      set.status = 401;
+      return { error: "Unauthorized" };
+    }
+
+    const company = await prisma.company.findUnique({
+      where: { name: params.name },
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        stripeSubscriptionId: true,
+        stripeCurrentPeriodEnd: true,
+      },
+    });
+
+    if (!company) {
+      set.status = 404;
+      return { error: "Company not found" };
+    }
+
+    const userCompanies = await prisma.userCompany.findMany({
+      where: {
+        userId: session.user.id,
+        companyId: company.id,
+      },
+      include: {
+        role: {
+          include: {
+            permissions: {
+              select: {
+                id: true,
+                name: true,
+                desc: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (userCompanies.length === 0) {
+      set.status = 404;
+      return { error: "Company not found or access denied" };
+    }
+
+    // Aggregate all permissions from all roles
+    const allPermissions = new Set<string>();
+    let isOwner = false;
+    const roles = userCompanies.map(uc => uc.role);
+    
+    roles.forEach(role => {
+      if (role.name === "owner") {
+        isOwner = true;
+      }
+      role.permissions.forEach((perm: { name: string }) => {
+        allPermissions.add(perm.name);
+      });
+    });
+
+    const hasActiveSubscription = company.stripeSubscriptionId && 
+      company.stripeCurrentPeriodEnd && 
+      new Date(company.stripeCurrentPeriodEnd) > new Date();
+
+    return {
+      company: {
+        id: company.id,
+        name: company.name,
+        image: company.image,
+        isOwner,
+        roles: roles.map(r => r.name),
+        permissions: Array.from(allPermissions),
+        hasActiveSubscription,
+        currentPeriodEnd: company.stripeCurrentPeriodEnd,
+      },
+    };
+  })
+
   // GET /api/company/:id - Get company by ID
   .get("/:id", async ({ request, params, set }) => {
     const session = await auth.api.getSession({ headers: request.headers });
@@ -108,8 +223,8 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
       return { error: "Unauthorized" };
     }
 
-    // Check if user has access to this company
-    const userCompany = await prisma.userCompany.findFirst({
+    // Get all user roles in this company
+    const userCompanies = await prisma.userCompany.findMany({
       where: {
         userId: session.user.id,
         companyId: params.id,
@@ -138,32 +253,73 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
           },
         },
         role: {
-          select: {
-            id: true,
-            name: true,
+          include: {
+            permissions: {
+              select: {
+                id: true,
+                name: true,
+                desc: true,
+              },
+            },
           },
         },
       },
     });
 
-    if (!userCompany) {
+    if (userCompanies.length === 0) {
       set.status = 404;
       return { error: "Company not found or access denied" };
     }
 
+    // Aggregate all permissions from all roles
+    const allPermissions = new Set<string>();
+    let isOwner = false;
+    const roles = userCompanies.map(uc => uc.role);
+    
+    roles.forEach(role => {
+      if (role.name === "owner") {
+        isOwner = true;
+      }
+      role.permissions.forEach((perm: { name: string }) => {
+        allPermissions.add(perm.name);
+      });
+    });
+
+    // If user is a member of the company, they can view company details
+    // Check permission to view members (optional - if they have user:view, show members)
+    const canViewMembers = isOwner || allPermissions.has("member:user:view");
+    
+    let members: any[] = [];
+    if (canViewMembers) {
+      // Group users by userId to handle multiple roles
+      const userMap = new Map();
+      userCompanies[0].company.users.forEach((uc) => {
+        const userId = uc.user.id;
+        if (!userMap.has(userId)) {
+          userMap.set(userId, {
+            ...uc.user,
+            roles: [],
+            joinedAt: uc.createdAt,
+          });
+        }
+        userMap.get(userId).roles.push({
+          id: uc.role.id,
+          name: uc.role.name,
+        });
+      });
+      members = Array.from(userMap.values());
+    }
+
     return {
       company: {
-        ...userCompany.company,
-        isOwner: userCompany.role.name === "owner",
-        role: userCompany.role.name,
-        hasActiveSubscription: userCompany.company.stripeSubscriptionId && 
-          userCompany.company.stripeCurrentPeriodEnd && 
-          new Date(userCompany.company.stripeCurrentPeriodEnd) > new Date(),
-        members: userCompany.company.users.map((uc) => ({
-          ...uc.user,
-          role: uc.role.name,
-          joinedAt: uc.createdAt,
-        })),
+        ...userCompanies[0].company,
+        isOwner,
+        roles: roles.map(r => r.name),
+        permissions: Array.from(allPermissions),
+        hasActiveSubscription: userCompanies[0].company.stripeSubscriptionId && 
+          userCompanies[0].company.stripeCurrentPeriodEnd && 
+          new Date(userCompanies[0].company.stripeCurrentPeriodEnd) > new Date(),
+        members,
       },
     };
   })
@@ -179,7 +335,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         return { error: "Unauthorized" };
       }
 
-      const { name } = body as { name: string };
+      const { name, image } = body as { name: string; image?: string };
 
       if (!name || name.trim().length === 0) {
         set.status = 400;
@@ -191,6 +347,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         const company = await prisma.company.create({
           data: {
             name: name.trim(),
+            image: image && image.trim().length > 0 ? image.trim() : null,
             userId: session.user.id,
           },
         });
@@ -237,6 +394,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
     {
       body: t.Object({
         name: t.String({ minLength: 1, maxLength: 100 }),
+        image: t.Optional(t.String()),
       }),
     }
   )
@@ -252,7 +410,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         return { error: "Unauthorized" };
       }
 
-      // Check if user has owner role
+      // Check if user has access to this company
       const userCompany = await prisma.userCompany.findFirst({
         where: {
           userId: session.user.id,
@@ -263,9 +421,16 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         },
       });
 
-      if (!userCompany || userCompany.role.name !== "owner") {
+      if (!userCompany) {
+        set.status = 404;
+        return { error: "Company not found or access denied" };
+      }
+
+      // Check permission
+      const canUpdate = await hasPermission(session.user.id, params.id, "company:update");
+      if (!canUpdate) {
         set.status = 403;
-        return { error: "Only owner can update company" };
+        return { error: "You don't have permission to update company" };
       }
 
       const { name } = body as { name: string };
@@ -316,7 +481,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
       return { error: "Unauthorized" };
     }
 
-      // Check if user has owner role
+      // Check if user has access to this company
       const userCompany = await prisma.userCompany.findFirst({
         where: {
           userId: session.user.id,
@@ -327,9 +492,16 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         },
       });
 
-      if (!userCompany || userCompany.role.name !== "owner") {
+      if (!userCompany) {
+        set.status = 404;
+        return { error: "Company not found or access denied" };
+      }
+
+      // Check permission
+      const canDelete = await hasPermission(session.user.id, params.id, "company:delete");
+      if (!canDelete) {
         set.status = 403;
-        return { error: "Only owner can delete company" };
+        return { error: "You don't have permission to delete company" };
       }
 
     // Delete company (cascade will delete UserCompany relations)
@@ -368,22 +540,23 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         return { error: "Company not found or access denied" };
       }
 
-      // Only owner can add members (can extend to admin later)
-      if (userCompany.role.name !== "owner") {
+      // Check permission
+      const canAddMember = await hasPermission(session.user.id, params.id, "member:user:create");
+      if (!canAddMember) {
         set.status = 403;
-        return { error: "Only owner can add members" };
+        return { error: "You don't have permission to add members" };
       }
 
-      const { userId, roleId } = body as { userId: string; roleId?: string };
+      const { userId, roleIds } = body as { userId: string; roleIds?: string[] };
 
       if (!userId) {
         set.status = 400;
         return { error: "User ID is required" };
       }
 
-      if (!roleId) {
+      if (!roleIds || roleIds.length === 0) {
         set.status = 400;
-        return { error: "Role ID is required" };
+        return { error: "At least one role ID is required" };
       }
 
       // Check if user exists
@@ -396,45 +569,50 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         return { error: "User not found" };
       }
 
-      // Check if already a member
-      const existingMember = await prisma.userCompany.findFirst({
+      // Check if roles exist and belong to this company
+      const roles = await prisma.role.findMany({
         where: {
-          userId: userId,
+          id: { in: roleIds },
           companyId: params.id,
         },
       });
 
-      if (existingMember) {
-        set.status = 409;
-        return { error: "User is already a member of this company" };
-      }
-
-      // Check if role exists and belongs to this company
-      const role = await prisma.role.findFirst({
-        where: {
-          id: roleId,
-          companyId: params.id,
-        },
-      });
-
-      if (!role) {
+      if (roles.length !== roleIds.length) {
         set.status = 404;
-        return { error: "Role not found or does not belong to this company" };
+        return { error: "One or more roles not found or do not belong to this company" };
       }
 
       // Prevent assigning owner role
-      if (role.name === "owner") {
+      const hasOwnerRole = roles.some(role => role.name === "owner");
+      if (hasOwnerRole) {
         set.status = 400;
         return { error: "Cannot assign owner role. Owner role is automatically assigned to company creator." };
       }
 
-      // Add member
-      await prisma.userCompany.create({
-        data: {
+      // Check for existing UserCompany records to avoid duplicates
+      const existingRecords = await prisma.userCompany.findMany({
+        where: {
           userId: userId,
           companyId: params.id,
-          roleId: role.id,
+          roleId: { in: roleIds },
         },
+      });
+
+      const existingRoleIds = existingRecords.map(r => r.roleId);
+      const newRoleIds = roleIds.filter(id => !existingRoleIds.includes(id));
+
+      if (newRoleIds.length === 0) {
+        set.status = 409;
+        return { error: "User already has all selected roles in this company" };
+      }
+
+      // Add member with multiple roles
+      await prisma.userCompany.createMany({
+        data: newRoleIds.map(roleId => ({
+          userId: userId,
+          companyId: params.id,
+          roleId: roleId,
+        })),
       });
 
       return { success: true, message: "Member added successfully" };
@@ -442,7 +620,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
     {
       body: t.Object({
         userId: t.String(),
-        roleId: t.String(),
+        roleIds: t.Array(t.String()),
       }),
     }
   )
@@ -474,10 +652,11 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         return { error: "Company not found or access denied" };
       }
 
-      // Only owner can update member roles
-      if (currentUserCompany.role.name !== "owner") {
+      // Check permission
+      const canUpdateMember = await hasPermission(session.user.id, params.id, "member:user:update");
+      if (!canUpdateMember) {
         set.status = 403;
-        return { error: "Only owner can update member roles" };
+        return { error: "You don't have permission to update member roles" };
       }
 
       // Check if member exists and get their current role
@@ -594,13 +773,15 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
       return { error: "Cannot remove owner. Transfer ownership first or delete the company." };
     }
 
-    const isOwner = currentUserCompany.role.name === "owner";
     const isRemovingSelf = params.userId === session.user.id;
 
-    // Only owner can remove other members, or user can remove themselves
-    if (!isOwner && !isRemovingSelf) {
-      set.status = 403;
-      return { error: "Only owner can remove other members" };
+    // User can remove themselves, or check permission for removing others
+    if (!isRemovingSelf) {
+      const canDeleteMember = await hasPermission(session.user.id, params.id, "member:user:delete");
+      if (!canDeleteMember) {
+        set.status = 403;
+        return { error: "You don't have permission to remove members" };
+      }
     }
 
     // Remove member
@@ -636,6 +817,13 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
       return { error: "Company not found or access denied" };
     }
 
+    // Check permission to view roles
+    const canViewRoles = await hasPermission(session.user.id, params.id, "member:role:view");
+    if (!canViewRoles) {
+      set.status = 403;
+      return { error: "You don't have permission to view roles" };
+    }
+
     const roles = await prisma.role.findMany({
       where: { companyId: params.id },
       include: {
@@ -643,6 +831,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
           select: {
             id: true,
             name: true,
+            desc: true,
           },
         },
       },
@@ -674,6 +863,13 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
       return { error: "Company not found or access denied" };
     }
 
+    // Check permission to view roles
+    const canViewRoles = await hasPermission(session.user.id, params.id, "member:role:view");
+    if (!canViewRoles) {
+      set.status = 403;
+      return { error: "You don't have permission to view roles" };
+    }
+
     // Get role with users
     const role = await prisma.role.findFirst({
       where: {
@@ -697,6 +893,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
           select: {
             id: true,
             name: true,
+            desc: true,
           },
         },
       },
@@ -729,7 +926,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         return { error: "Unauthorized" };
       }
 
-      // Check if user has owner role
+      // Check if user has access to this company
       const userCompany = await prisma.userCompany.findFirst({
         where: {
           userId: session.user.id,
@@ -740,9 +937,16 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         },
       });
 
-      if (!userCompany || userCompany.role.name !== "owner") {
+      if (!userCompany) {
+        set.status = 404;
+        return { error: "Company not found or access denied" };
+      }
+
+      // Check permission
+      const canCreateRole = await hasPermission(session.user.id, params.id, "member:role:create");
+      if (!canCreateRole) {
         set.status = 403;
-        return { error: "Only owner can create roles" };
+        return { error: "You don't have permission to create roles" };
       }
 
       const { name, permissionIds } = body as { name: string; permissionIds?: string[] };
@@ -774,6 +978,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
               select: {
                 id: true,
                 name: true,
+                desc: true,
               },
             },
           },
@@ -807,7 +1012,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         return { error: "Unauthorized" };
       }
 
-      // Check if user has owner role
+      // Check if user has access to this company
       const userCompany = await prisma.userCompany.findFirst({
         where: {
           userId: session.user.id,
@@ -818,9 +1023,16 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         },
       });
 
-      if (!userCompany || userCompany.role.name !== "owner") {
+      if (!userCompany) {
+        set.status = 404;
+        return { error: "Company not found or access denied" };
+      }
+
+      // Check permission
+      const canUpdateRole = await hasPermission(session.user.id, params.id, "member:role:update");
+      if (!canUpdateRole) {
         set.status = 403;
-        return { error: "Only owner can update roles" };
+        return { error: "You don't have permission to update roles" };
       }
 
       // Check if role exists and belongs to this company
@@ -889,6 +1101,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
               select: {
                 id: true,
                 name: true,
+                desc: true,
               },
             },
           },
@@ -920,7 +1133,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
       return { error: "Unauthorized" };
     }
 
-    // Check if user has owner role
+    // Check if user has access to this company
     const userCompany = await prisma.userCompany.findFirst({
       where: {
         userId: session.user.id,
@@ -931,9 +1144,16 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
       },
     });
 
-    if (!userCompany || userCompany.role.name !== "owner") {
+    if (!userCompany) {
+      set.status = 404;
+      return { error: "Company not found or access denied" };
+    }
+
+    // Check permission
+    const canDeleteRole = await hasPermission(session.user.id, params.id, "member:role:delete");
+    if (!canDeleteRole) {
       set.status = 403;
-      return { error: "Only owner can delete roles" };
+      return { error: "You don't have permission to delete roles" };
     }
 
     // Check if role exists and belongs to this company

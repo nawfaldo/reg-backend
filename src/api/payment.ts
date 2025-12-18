@@ -132,8 +132,8 @@ export const paymentRoutes = new Elysia({ prefix: "/api/payment" })
           quantity: 1,
         },
       ],
-      success_url: `${FRONTEND_URL}/client/companies/${encodeURIComponent(company.name)}?success=true`,
-      cancel_url: `${FRONTEND_URL}/client/companies/${encodeURIComponent(company.name)}/billing?canceled=true`,
+      success_url: `${FRONTEND_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
+      cancel_url: `${FRONTEND_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
       metadata: { userId: userId, companyId: company.id },
     });
 

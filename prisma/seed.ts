@@ -6,14 +6,16 @@ const adapter = new PrismaLibSql({ url: process.env.DATABASE_URL || "file:./dev.
 const prisma = new PrismaClient({ adapter });
 
 const DEFAULT_PERMISSIONS = [
-  { id: "1.1", name: "role:view" },
-  { id: "1.2", name: "role:create" },
-  { id: "1.3", name: "role:update" },
-  { id: "1.4", name: "role:delete" },
-  { id: "2.1", name: "user:view" },
-  { id: "2.2", name: "user:create" },
-  { id: "2.3", name: "user:update" },
-  { id: "2.4", name: "user:delete" },
+  // member
+  { id: "1.1.1", name: "member:role:view", desc: "Melihat daftar peran" },
+  { id: "1.1.2", name: "member:role:create", desc: "Membuat peran baru" },
+  { id: "1.1.3", name: "member:role:update", desc: "Mengubah peran yang ada" },
+  { id: "1.1.4", name: "member:role:delete", desc: "Menghapus peran" },
+  { id: "1.2.1", name: "member:user:view", desc: "Melihat daftar anggota" },
+  { id: "1.2.2", name: "member:user:create", desc: "Menambahkan anggota baru" },
+  { id: "1.2.3", name: "member:user:update", desc: "Mengubah peran anggota" },
+  { id: "1.2.4", name: "member:user:delete", desc: "Menghapus anggota" },
+  { id: "1.3.1", name: "member:permission:view", desc: "Melihat daftar perizinan" },
 ];
 
 async function main() {
@@ -26,10 +28,12 @@ async function main() {
       },
       update: {
         name: permission.name,
+        desc: permission.desc,
       },
       create: {
         id: permission.id,
         name: permission.name,
+        desc: permission.desc,
       },
     });
   }

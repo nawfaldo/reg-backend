@@ -73,6 +73,7 @@ model Verification {
 model Company {
   id        String        @id @default(cuid())
   name      String        @unique
+  image     String?
   userId    String
   stripeCustomerId        String?
   stripeSubscriptionId    String?
@@ -103,6 +104,7 @@ model Role {
 model Permission {
   id        String   @id 
   name      String   @unique
+  desc      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   roles     Role[]
@@ -120,6 +122,6 @@ model UserCompany {
   company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
-  @@unique([userId, companyId])
+  @@unique([userId, companyId, roleId])
   @@map("user_company")
 }
