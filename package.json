@@ -2,9 +2,11 @@
   "name": "server",
   "version": "1.0.50",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts",
-    "seed": "bunx prisma db seed"
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "dev": "bun run --watch src/index.ts",
+      "seed": "bunx prisma db seed",
+      "build": "prisma generate",
+      "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "bun run prisma/seed.ts"

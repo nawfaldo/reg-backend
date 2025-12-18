@@ -18,7 +18,7 @@ const app = new Elysia()
   .use(meRoutes)
   .use(paymentRoutes)
   .use(companyRoutes)
-  .listen(3000, async ({ hostname, port }) => {
+  .listen(process.env.PORT || 3000, async ({ hostname, port }) => {
     console.log(`Server is running at ${hostname}:${port}`);
 
     if (process.env.NODE_ENV === "development") {
