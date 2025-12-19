@@ -4,10 +4,12 @@ import { prisma } from "../../db";
 import { hasPermission } from "./utils";
 import { roleRoutes } from "./roles";
 import { memberRoutes } from "./members";
+import { landRoutes } from "./land";
 
 export const companyRoutes = new Elysia({ prefix: "/api/company" })
   .use(roleRoutes)
   .use(memberRoutes)
+  .use(landRoutes)
 
   .get("/permissions", async ({ request, set }) => {
     const session = await auth.api.getSession({ headers: request.headers });
