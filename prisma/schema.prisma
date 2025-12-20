@@ -82,6 +82,7 @@ model Company {
     users                  UserCompany[]
     farmers                Farmer[]
     farmerGroups           FarmerGroup[]
+    batches                Batch[]
 
     @@map("company")
 }
@@ -197,15 +198,18 @@ model Commodity {
 model Batch {
     id          String   @id @default(cuid())
     commodityId String
-    lotCode     String   @unique
+    companyId   String
+    lotCode     String
     harvestDate DateTime
     totalKg     Float
     createdAt   DateTime @default(now())
 
+    company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
     commodity       Commodity        @relation(fields: [commodityId], references: [id])
     batchSources    BatchSource[]
     batchAttributes BatchAttribute[]
 
+    @@unique([companyId, lotCode])
     @@map("batch")
 }
 

@@ -7,6 +7,7 @@ import { memberRoutes } from "./members";
 import { landRoutes } from "./land";
 import { workerRoutes } from "./worker";
 import { commodityRoutes } from "./commodity";
+import { batchRoutes } from "./batch";
 
 export const companyRoutes = new Elysia({ prefix: "/api/company" })
   .use(roleRoutes)
@@ -14,6 +15,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
   .use(landRoutes)
   .use(workerRoutes)
   .use(commodityRoutes)
+  .use(batchRoutes)
 
   .get("/permissions", async ({ request, set }) => {
     const session = await auth.api.getSession({ headers: request.headers });
