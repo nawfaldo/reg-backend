@@ -1,141 +1,259 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
+    provider = "sqlite"
 }
 
 model User {
-  id            String        @id @default(cuid())
-  name          String
-  email         String        @unique
-  emailVerified Boolean
-  image         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  companies     UserCompany[]
+    id            String        @id @default(cuid())
+    name          String
+    email         String        @unique
+    emailVerified Boolean
+    image         String?
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+    accounts      Account[]
+    sessions      Session[]
+    companies     UserCompany[]
 
-  @@map("user")
+    @@map("user")
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime
-  updatedAt DateTime
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id        String   @id
+    expiresAt DateTime
+    token     String   @unique
+    createdAt DateTime
+    updatedAt DateTime
+    ipAddress String?
+    userAgent String?
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("session")
+    @@map("session")
 }
 
 model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime
-  updatedAt             DateTime
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id                    String    @id
+    accountId             String
+    providerId            String
+    userId                String
+    accessToken           String?
+    refreshToken          String?
+    idToken               String?
+    accessTokenExpiresAt  DateTime?
+    refreshTokenExpiresAt DateTime?
+    scope                 String?
+    password              String?
+    createdAt             DateTime
+    updatedAt             DateTime
+    user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("account")
+    @@map("account")
 }
 
 model Verification {
-  id         String    @id
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime?
-  updatedAt  DateTime?
+    id         String    @id
+    identifier String
+    value      String
+    expiresAt  DateTime
+    createdAt  DateTime?
+    updatedAt  DateTime?
 
-  @@map("verification")
+    @@map("verification")
 }
 
 model Company {
-  id                     String        @id @default(cuid())
-  name                   String        @unique
-  image                  String?
-  userId                 String
-  stripeCustomerId       String?
-  stripeSubscriptionId   String?
-  stripePriceId          String?
-  stripeCurrentPeriodEnd DateTime?
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
-  land                   Land[]
-  roles                  Role[]
-  users                  UserCompany[]
+    id                     String        @id @default(cuid())
+    name                   String        @unique
+    image                  String?
+    userId                 String
+    stripeCustomerId       String?
+    stripeSubscriptionId   String?
+    stripePriceId          String?
+    stripeCurrentPeriodEnd DateTime?
+    createdAt              DateTime      @default(now())
+    updatedAt              DateTime      @updatedAt
+    land                   Land[]
+    roles                  Role[]
+    users                  UserCompany[]
+    farmers                Farmer[]
+    farmerGroups           FarmerGroup[]
 
-  @@map("company")
+    @@map("company")
 }
 
 model Role {
-  id          String        @id @default(cuid())
-  name        String
-  companyId   String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  users       UserCompany[]
-  permissions Permission[]  @relation("PermissionToRole")
+    id          String        @id @default(cuid())
+    name        String
+    companyId   String
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    users       UserCompany[]
+    permissions Permission[]  @relation("PermissionToRole")
 
-  @@unique([name, companyId])
-  @@map("role")
+    @@unique([name, companyId])
+    @@map("role")
 }
 
 model Permission {
-  id        String   @id
-  name      String   @unique
-  desc      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  roles     Role[]   @relation("PermissionToRole")
+    id        String   @id
+    name      String   @unique
+    desc      String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    roles     Role[]   @relation("PermissionToRole")
 
-  @@map("permission")
+    @@map("permission")
 }
 
 model UserCompany {
-  id        String   @id @default(cuid())
-  userId    String
-  companyId String
-  roleId    String
-  createdAt DateTime @default(now())
-  role      Role     @relation(fields: [roleId], references: [id])
-  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id        String   @id @default(cuid())
+    userId    String
+    companyId String
+    roleId    String
+    createdAt DateTime @default(now())
+    role      Role     @relation(fields: [roleId], references: [id])
+    company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, companyId, roleId])
-  @@map("user_company")
+    @@unique([userId, companyId, roleId])
+    @@map("user_company")
 }
 
 model Land {
-  id                  String   @id @default(cuid())
-  companyId           String
-  name                String
-  areaHectares        Float
-  latitude            Float
-  longitude           Float
-  location            String
-  geoPolygon          String
-  isDeforestationFree Boolean?
-  recordedAt          DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    id                  String        @id @default(cuid())
+    companyId           String
+    name                String
+    areaHectares        Float
+    latitude            Float
+    longitude           Float
+    location            String
+    geoPolygon          String
+    isDeforestationFree Boolean?
+    recordedAt          DateTime      @default(now())
+    updatedAt           DateTime      @updatedAt
+    company             Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    batchSources        BatchSource[]
 
-  @@map("land")
+    @@map("land")
+}
+
+model Farmer {
+    id           String              @id @default(cuid())
+    firstName    String
+    lastName     String
+    nationalId   String              @unique
+    phoneNumber  String
+    address      String
+    companyId    String
+    createdAt    DateTime            @default(now())
+    updatedAt    DateTime            @updatedAt
+    company      Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    farmerGroups FarmerGroupFarmer[]
+
+    @@map("farmer")
+}
+
+model FarmerGroup {
+    id           String              @id @default(cuid())
+    name         String
+    companyId    String
+    createdAt    DateTime            @default(now())
+    updatedAt    DateTime            @updatedAt
+    company      Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    farmers      FarmerGroupFarmer[]
+    batchSources BatchSource[]
+
+    @@map("farmer_group")
+}
+
+model FarmerGroupFarmer {
+    id            String      @id @default(cuid())
+    farmerId      String
+    farmerGroupId String
+    createdAt     DateTime    @default(now())
+    farmer        Farmer      @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+    farmerGroup   FarmerGroup @relation(fields: [farmerGroupId], references: [id], onDelete: Cascade)
+
+    @@unique([farmerId, farmerGroupId])
+    @@map("farmer_group_farmer")
+}
+
+model Commodity {
+    id        String   @id @default(cuid())
+    name      String
+    code      String
+    createdAt DateTime @default(now())
+    batches   Batch[]
+
+    @@map("commodity")
+}
+
+model Batch {
+    id          String   @id @default(cuid())
+    commodityId String
+    lotCode     String   @unique
+    harvestDate DateTime
+    totalKg     Float
+    createdAt   DateTime @default(now())
+
+    commodity       Commodity        @relation(fields: [commodityId], references: [id])
+    batchSources    BatchSource[]
+    batchAttributes BatchAttribute[]
+
+    @@map("batch")
+}
+
+enum BatchRelationType {
+    SPLIT
+    MERGE
+    TRANSFORM
+    REPACK
+}
+
+model BatchRelation {
+    id            String            @id @default(cuid())
+    parentBatchId String
+    childBatchId  String
+    relationType  BatchRelationType
+    createdAt     DateTime          @default(now())
+
+    @@unique([parentBatchId, childBatchId])
+    @@map("batch_relation")
+}
+
+model BatchSource {
+    id            String   @id @default(cuid())
+    batchId       String
+    farmerGroupId String
+    landId        String
+    volumeKg      Float
+    landSnapshot  Json
+    createdAt     DateTime @default(now())
+
+    batch       Batch       @relation(fields: [batchId], references: [id])
+    farmerGroup FarmerGroup @relation(fields: [farmerGroupId], references: [id])
+    land        Land        @relation(fields: [landId], references: [id])
+
+    @@unique([batchId, farmerGroupId, landId])
+    @@map("batch_source")
+}
+
+model BatchAttribute {
+    id         String   @id @default(cuid())
+    batchId    String
+    key        String
+    value      String
+    unit       String?
+    recordedAt DateTime @default(now())
+
+    batch Batch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+    @@index([batchId, key])
+    @@map("batch_attribute")
 }
