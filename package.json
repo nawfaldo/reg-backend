@@ -2,7 +2,7 @@
   "name": "server",
   "version": "1.0.50",
   "scripts": {
-      "build": "bunx prisma generate",
+      "build": "tsdown src/index.ts",
       "dev": "bun run --watch src/index.ts",
       "seed": "bunx prisma db seed"
   },
@@ -24,6 +24,5 @@
     "prisma": "^7.1.0",
     "typescript": "^5.9.3"
   },
-  "module": "src/index.ts",
-  "bunVersion": "1.x"
+  "module": "src/index.ts"
 }
