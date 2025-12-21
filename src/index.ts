@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { auth } from "./api/auth";
-import { dts } from "elysia-remote-dts";
+// import { dts } from "elysia-remote-dts";
 import { paymentRoutes } from "./api/payment";
 import { companyRoutes } from "./api/company";
 import { meRoutes } from "./api/me";
@@ -46,4 +46,4 @@ const app = new Elysia()
   //   }
   // });
 
-export type App = typeof app;
+// export type App = typeof app;
