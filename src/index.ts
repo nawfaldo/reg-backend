@@ -16,7 +16,7 @@ const app = new Elysia()
     }),
   )
   .mount(auth.handler)
-  .use(dts("./src/index.ts"))
+  // .use(dts("./src/index.ts"))
   .use(meRoutes)
   .use(paymentRoutes)
   .use(companyRoutes)
