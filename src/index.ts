@@ -6,8 +6,8 @@ import { paymentRoutes } from "./api/payment";
 import { companyRoutes } from "./api/company";
 import { meRoutes } from "./api/me";
 
-const app = new Elysia()
-// export default new Elysia() 
+// const app = new Elysia()
+export default new Elysia() 
   .use(
     cors({
       origin: true,
