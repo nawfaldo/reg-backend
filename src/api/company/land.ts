@@ -22,8 +22,7 @@ export const landRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    // Check permission - you can customize this permission name later
-    const canViewLand = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canViewLand = await hasPermission(session.user.id, params.id, "land:view");
     if (!canViewLand) {
       set.status = 403;
       return { error: "You don't have permission to view lands" };
@@ -55,7 +54,7 @@ export const landRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canViewLand = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canViewLand = await hasPermission(session.user.id, params.id, "land:view");
     if (!canViewLand) {
       set.status = 403;
       return { error: "You don't have permission to view lands" };
@@ -104,7 +103,7 @@ export const landRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canCreateLand = await hasPermission(session.user.id, params.id, "member:user:create");
+      const canCreateLand = await hasPermission(session.user.id, params.id, "land:create");
       if (!canCreateLand) {
         set.status = 403;
         return { error: "You don't have permission to create lands" };
@@ -198,7 +197,7 @@ export const landRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canUpdateLand = await hasPermission(session.user.id, params.id, "member:user:update");
+      const canUpdateLand = await hasPermission(session.user.id, params.id, "land:update");
       if (!canUpdateLand) {
         set.status = 403;
         return { error: "You don't have permission to update lands" };
@@ -318,7 +317,7 @@ export const landRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canDeleteLand = await hasPermission(session.user.id, params.id, "member:user:delete");
+    const canDeleteLand = await hasPermission(session.user.id, params.id, "land:delete");
     if (!canDeleteLand) {
       set.status = 403;
       return { error: "You don't have permission to delete lands" };

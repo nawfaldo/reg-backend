@@ -24,7 +24,7 @@ export const workerRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "worker:individual:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view farmers" };
@@ -74,7 +74,7 @@ export const workerRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "worker:individual:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view farmers" };
@@ -133,7 +133,7 @@ export const workerRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canCreate = await hasPermission(session.user.id, params.id, "member:user:create");
+      const canCreate = await hasPermission(session.user.id, params.id, "worker:individual:create");
       if (!canCreate) {
         set.status = 403;
         return { error: "You don't have permission to create farmers" };
@@ -266,7 +266,7 @@ export const workerRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canUpdate = await hasPermission(session.user.id, params.id, "member:user:update");
+      const canUpdate = await hasPermission(session.user.id, params.id, "worker:individual:update");
       if (!canUpdate) {
         set.status = 403;
         return { error: "You don't have permission to update farmers" };
@@ -436,7 +436,7 @@ export const workerRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canDelete = await hasPermission(session.user.id, params.id, "member:user:delete");
+    const canDelete = await hasPermission(session.user.id, params.id, "worker:individual:delete");
     if (!canDelete) {
       set.status = 403;
       return { error: "You don't have permission to delete farmers" };
@@ -481,7 +481,7 @@ export const workerRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "worker:group:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view farmer groups" };
@@ -533,7 +533,7 @@ export const workerRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "worker:group:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view farmer groups" };
@@ -596,7 +596,7 @@ export const workerRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canCreate = await hasPermission(session.user.id, params.id, "member:user:create");
+      const canCreate = await hasPermission(session.user.id, params.id, "worker:group:create");
       if (!canCreate) {
         set.status = 403;
         return { error: "You don't have permission to create farmer groups" };
@@ -689,7 +689,7 @@ export const workerRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canUpdate = await hasPermission(session.user.id, params.id, "member:user:update");
+      const canUpdate = await hasPermission(session.user.id, params.id, "worker:group:update");
       if (!canUpdate) {
         set.status = 403;
         return { error: "You don't have permission to update farmer groups" };
@@ -807,7 +807,7 @@ export const workerRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canDelete = await hasPermission(session.user.id, params.id, "member:user:delete");
+    const canDelete = await hasPermission(session.user.id, params.id, "worker:group:delete");
     if (!canDelete) {
       set.status = 403;
       return { error: "You don't have permission to delete farmer groups" };

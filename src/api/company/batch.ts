@@ -37,7 +37,7 @@ export const batchRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "batch:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view batches" };
@@ -81,7 +81,7 @@ export const batchRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "batch:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view batches" };
@@ -132,7 +132,7 @@ export const batchRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canCreate = await hasPermission(session.user.id, params.id, "member:user:create");
+      const canCreate = await hasPermission(session.user.id, params.id, "batch:create");
       if (!canCreate) {
         set.status = 403;
         return { error: "You don't have permission to create batches" };
@@ -228,7 +228,7 @@ export const batchRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canUpdate = await hasPermission(session.user.id, params.id, "member:user:update");
+      const canUpdate = await hasPermission(session.user.id, params.id, "batch:update");
       if (!canUpdate) {
         set.status = 403;
         return { error: "You don't have permission to update batches" };
@@ -318,7 +318,7 @@ export const batchRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canDelete = await hasPermission(session.user.id, params.id, "member:user:delete");
+    const canDelete = await hasPermission(session.user.id, params.id, "batch:delete");
     if (!canDelete) {
       set.status = 403;
       return { error: "You don't have permission to delete batches" };
@@ -388,7 +388,7 @@ export const batchRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "batch_source:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view batch sources" };
@@ -448,7 +448,7 @@ export const batchRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "batch_source:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view batch sources" };
@@ -527,7 +527,7 @@ export const batchRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canCreate = await hasPermission(session.user.id, params.id, "member:user:create");
+      const canCreate = await hasPermission(session.user.id, params.id, "batch_source:create");
       if (!canCreate) {
         set.status = 403;
         return { error: "You don't have permission to create batch sources" };
@@ -669,7 +669,7 @@ export const batchRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canUpdate = await hasPermission(session.user.id, params.id, "member:user:update");
+      const canUpdate = await hasPermission(session.user.id, params.id, "batch_source:update");
       if (!canUpdate) {
         set.status = 403;
         return { error: "You don't have permission to update batch sources" };
@@ -828,7 +828,7 @@ export const batchRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canDelete = await hasPermission(session.user.id, params.id, "member:user:delete");
+    const canDelete = await hasPermission(session.user.id, params.id, "batch_source:delete");
     if (!canDelete) {
       set.status = 403;
       return { error: "You don't have permission to delete batch sources" };
@@ -890,7 +890,7 @@ export const batchRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "batch_attribute:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view batch attributes" };
@@ -935,7 +935,7 @@ export const batchRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "batch_attribute:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view batch attributes" };
@@ -998,7 +998,7 @@ export const batchRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canCreate = await hasPermission(session.user.id, params.id, "member:user:create");
+      const canCreate = await hasPermission(session.user.id, params.id, "batch_attribute:create");
       if (!canCreate) {
         set.status = 403;
         return { error: "You don't have permission to create batch attributes" };
@@ -1088,7 +1088,7 @@ export const batchRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canUpdate = await hasPermission(session.user.id, params.id, "member:user:update");
+      const canUpdate = await hasPermission(session.user.id, params.id, "batch_attribute:update");
       if (!canUpdate) {
         set.status = 403;
         return { error: "You don't have permission to update batch attributes" };
@@ -1200,7 +1200,7 @@ export const batchRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canDelete = await hasPermission(session.user.id, params.id, "member:user:delete");
+    const canDelete = await hasPermission(session.user.id, params.id, "batch_attribute:delete");
     if (!canDelete) {
       set.status = 403;
       return { error: "You don't have permission to delete batch attributes" };

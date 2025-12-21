@@ -22,7 +22,7 @@ export const commodityRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "commodity:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view commodities" };
@@ -63,7 +63,7 @@ export const commodityRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canView = await hasPermission(session.user.id, params.id, "member:user:view");
+    const canView = await hasPermission(session.user.id, params.id, "commodity:view");
     if (!canView) {
       set.status = 403;
       return { error: "You don't have permission to view commodities" };
@@ -134,7 +134,7 @@ export const commodityRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canCreate = await hasPermission(session.user.id, params.id, "member:user:create");
+      const canCreate = await hasPermission(session.user.id, params.id, "commodity:create");
       if (!canCreate) {
         set.status = 403;
         return { error: "You don't have permission to create commodities" };
@@ -210,7 +210,7 @@ export const commodityRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canUpdate = await hasPermission(session.user.id, params.id, "member:user:update");
+      const canUpdate = await hasPermission(session.user.id, params.id, "commodity:update");
       if (!canUpdate) {
         set.status = 403;
         return { error: "You don't have permission to update commodities" };
@@ -299,7 +299,7 @@ export const commodityRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canDelete = await hasPermission(session.user.id, params.id, "member:user:delete");
+    const canDelete = await hasPermission(session.user.id, params.id, "commodity:delete");
     if (!canDelete) {
       set.status = 403;
       return { error: "You don't have permission to delete commodities" };
