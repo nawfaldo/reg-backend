@@ -1,12 +1,13 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { auth } from "./api/auth";
-import { dts } from "elysia-remote-dts";
+// import { dts } from "elysia-remote-dts";
 import { paymentRoutes } from "./api/payment";
 import { companyRoutes } from "./api/company";
 import { meRoutes } from "./api/me";
 
-const app = new Elysia()
+// const app = new Elysia()
+export default new Elysia() 
   .use(
     cors({
       origin: [`${process.env.CLIENT_WEBSITE_URL}`],
@@ -39,6 +40,4 @@ const app = new Elysia()
   //   }
   // });
 
-export default app.fetch;
-
-export type App = typeof app;
+// export type App = typeof app;
