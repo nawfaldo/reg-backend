@@ -11,7 +11,7 @@ if (!STRIPE_SECRET_KEY.startsWith("sk_")) {
   throw new Error(`Invalid STRIPE_SECRET_KEY format. Stripe keys should start with "sk_", but got: ${STRIPE_SECRET_KEY.substring(0, 10)}...`);
 }
 const stripe = new Stripe(STRIPE_SECRET_KEY);
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const WEB_CLIENT_URL = `${process.env.CLIENT_WEBSITE_URL}`
 
 // Helper to safely get subscription period end date
 function getSubscriptionPeriodEnd(subscription: any): Date {
@@ -145,8 +145,8 @@ export const paymentRoutes = new Elysia({ prefix: "/api/payment" })
             quantity: 1,
           },
         ],
-        success_url: `${FRONTEND_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
-        cancel_url: `${FRONTEND_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
+        success_url: `${WEB_CLIENT_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
+        cancel_url: `${WEB_CLIENT_URL}/client/company/${encodeURIComponent(company.name)}/setting`,
         metadata: { userId: userId, companyId: company.id },
       });
 

@@ -53,9 +53,9 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     },
   },
-  baseURL: "http://localhost:3000",
+  baseURL: `${process.env.SERVER_URL}`,
   trustedOrigins: [
-    "http://localhost:5173"
+    `${process.env.CLIENT_WEBSITE_URL}`
   ].filter(Boolean),
   advanced: {
     defaultCookieAttributes: {
