@@ -16,6 +16,7 @@ export default new Elysia()
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"], 
     }),
   )
+  .options("*", () => new Response(null, { status: 204 }))
   .get("/health", () => ({
     status: "ok",
     runtime: "vercel",
