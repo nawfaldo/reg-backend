@@ -16,6 +16,11 @@ export default new Elysia()
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"], 
     }),
   )
+  .get("/health", () => ({
+    status: "ok",
+    runtime: "vercel",
+    timestamp: new Date().toISOString(),
+  }))
   .mount(auth.handler)
   // .use(dts("./src/index.ts"))
   .use(meRoutes)
