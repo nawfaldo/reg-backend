@@ -23,27 +23,27 @@ const app = new Elysia()
     timestamp: new Date().toISOString(),
   }))
   .mount(auth.handler)
-  .use(dts("./src/index.ts"))
+  // .use(dts("./src/index.ts"))
   .use(meRoutes)
   .use(paymentRoutes)
   .use(companyRoutes)
-  .listen(process.env.PORT || 3000, async ({ hostname, port }) => {
-    console.log(`Server is running at ${hostname}:${port}`);
+  // .listen(process.env.PORT || 3000, async ({ hostname, port }) => {
+  //   console.log(`Server is running at ${hostname}:${port}`);
 
-    if (process.env.NODE_ENV === "development") {
-      try {
-        console.log("Syncing types to Frontend...");
+  //   if (process.env.NODE_ENV === "development") {
+  //     try {
+  //       console.log("Syncing types to Frontend...");
 
-        const req = await fetch(`http://${hostname}:${port}/server.d.ts`);
-        const typeDefinition = await req.text();
+  //       const req = await fetch(`http://${hostname}:${port}/server.d.ts`);
+  //       const typeDefinition = await req.text();
 
-        await Bun.write("../website/src/lib/server.d.ts", typeDefinition);
+  //       await Bun.write("../website/src/lib/server.d.ts", typeDefinition);
 
-        console.log("Types synced successfully!");
-      } catch (e) {
-        console.error("❌ Failed to sync types:", e);
-      }
-    }
-  });
+  //       console.log("Types synced successfully!");
+  //     } catch (e) {
+  //       console.error("❌ Failed to sync types:", e);
+  //     }
+  //   }
+  // });
 
 export type App = typeof app;
