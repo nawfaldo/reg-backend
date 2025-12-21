@@ -1,13 +1,13 @@
-// members.ts
+// admins.ts
 import { Elysia, t } from "elysia";
 import { auth } from "../auth";
 import { prisma } from "../../db";
 import { hasPermission } from "./utils";
 
-export const memberRoutes = new Elysia()
-  // POST /:id/members
+export const adminRoutes = new Elysia()
+  // POST /:id/admins
   .post(
-    "/:id/members",
+    "/:id/admins",
     async ({ request, params, body, set }) => {
       const session = await auth.api.getSession({ headers: request.headers });
       
@@ -26,10 +26,10 @@ export const memberRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canAddMember = await hasPermission(session.user.id, params.id, "member:user:create");
-      if (!canAddMember) {
+      const canAddAdmin = await hasPermission(session.user.id, params.id, "admin:user:create");
+      if (!canAddAdmin) {
         set.status = 403;
-        return { error: "You don't have permission to add members" };
+        return { error: "You don't have permission to add admins" };
       }
 
       const { userId, roleIds } = body as { userId: string; roleIds?: string[] };
@@ -56,7 +56,7 @@ export const memberRoutes = new Elysia()
 
       if (roles.length !== roleIds.length) {
         set.status = 404;
-        return { error: "One or more roles not found or do not belong to this company" };
+        return { error: "One or more admin roles not found or do not belong to this company" };
       }
 
       if (roles.some(role => role.name === "owner")) {
@@ -73,7 +73,7 @@ export const memberRoutes = new Elysia()
 
       if (newRoleIds.length === 0) {
         set.status = 409;
-        return { error: "User already has all selected roles in this company" };
+        return { error: "User already has all selected admin roles in this company" };
       }
 
       await prisma.userCompany.createMany({
@@ -84,7 +84,7 @@ export const memberRoutes = new Elysia()
         })),
       });
 
-      return { success: true, message: "Member added successfully" };
+      return { success: true, message: "Admin added successfully" };
     },
     {
       body: t.Object({
@@ -96,7 +96,7 @@ export const memberRoutes = new Elysia()
 
 
   .put(
-    "/:id/members/:userId",
+    "/:id/admin/:userId",
     async ({ request, params, body, set }) => {
       const session = await auth.api.getSession({ headers: request.headers });
       
@@ -115,10 +115,10 @@ export const memberRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canUpdateMember = await hasPermission(session.user.id, params.id, "member:user:update");
+      const canUpdateMember = await hasPermission(session.user.id, params.id, "admin:user:update");
       if (!canUpdateMember) {
         set.status = 403;
-        return { error: "You don't have permission to update member roles" };
+        return { error: "You don't have permission to update admin roles" };
       }
 
       const memberUserCompany = await prisma.userCompany.findFirst({
@@ -128,7 +128,7 @@ export const memberRoutes = new Elysia()
 
       if (!memberUserCompany) {
         set.status = 404;
-        return { error: "User is not a member of this company" };
+        return { error: "User is not a admin of this company" };
       }
 
       if (memberUserCompany.role.name === "owner") {
@@ -162,7 +162,7 @@ export const memberRoutes = new Elysia()
         data: { roleId: newRole.id },
       });
 
-      return { success: true, message: "Member role updated successfully" };
+      return { success: true, message: "Admin role updated successfully" };
     },
     {
       body: t.Object({
@@ -171,8 +171,8 @@ export const memberRoutes = new Elysia()
     }
   )
 
-  // DELETE /:id/members/:userId
-  .delete("/:id/members/:userId", async ({ request, params, set }) => {
+  // DELETE /:id/admin/:userId
+  .delete("/:id/admin/:userId", async ({ request, params, set }) => {
     const session = await auth.api.getSession({ headers: request.headers });
     
     if (!session || !session.user) {
@@ -197,7 +197,7 @@ export const memberRoutes = new Elysia()
 
     if (!removingUserCompany) {
       set.status = 404;
-      return { error: "User is not a member of this company" };
+      return { error: "User is not a admin of this company" };
     }
 
     if (removingUserCompany.role.name === "owner") {
@@ -208,10 +208,10 @@ export const memberRoutes = new Elysia()
     const isRemovingSelf = params.userId === session.user.id;
 
     if (!isRemovingSelf) {
-      const canDeleteMember = await hasPermission(session.user.id, params.id, "member:user:delete");
+      const canDeleteMember = await hasPermission(session.user.id, params.id, "admin:user:delete");
       if (!canDeleteMember) {
         set.status = 403;
-        return { error: "You don't have permission to remove members" };
+        return { error: "You don't have permission to remove admins" };
       }
     }
 
@@ -219,5 +219,5 @@ export const memberRoutes = new Elysia()
       where: { userId: params.userId, companyId: params.id },
     });
 
-    return { success: true, message: "Member removed successfully" };
+    return { success: true, message: "Admin removed successfully" };
   });

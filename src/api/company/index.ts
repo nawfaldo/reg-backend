@@ -3,7 +3,7 @@ import { auth } from "../auth";
 import { prisma } from "../../db";
 import { hasPermission } from "./utils";
 import { roleRoutes } from "./roles";
-import { memberRoutes } from "./members";
+import { adminRoutes } from "./admin";
 import { landRoutes } from "./land";
 import { workerRoutes } from "./worker";
 import { commodityRoutes } from "./commodity";
@@ -11,7 +11,7 @@ import { batchRoutes } from "./batch";
 
 export const companyRoutes = new Elysia({ prefix: "/api/company" })
   .use(roleRoutes)
-  .use(memberRoutes)
+  .use(adminRoutes)
   .use(landRoutes)
   .use(workerRoutes)
   .use(commodityRoutes)
@@ -189,10 +189,10 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
       role.permissions.forEach((perm) => allPermissions.add(perm.name));
     });
 
-    const canViewMembers = isOwner || allPermissions.has("member:user:view");
-    let members: any[] = [];
+    const canViewAdmins = isOwner || allPermissions.has("admin:user:view");
+    let admins: any[] = [];
 
-    if (canViewMembers) {
+    if (canViewAdmins) {
       const userMap = new Map();
       userCompanies[0].company.users.forEach((uc) => {
         const userId = uc.user.id;
@@ -201,7 +201,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
         }
         userMap.get(userId).roles.push({ id: uc.role.id, name: uc.role.name });
       });
-      members = Array.from(userMap.values());
+      admins = Array.from(userMap.values());
     }
 
     return {
@@ -214,7 +214,7 @@ export const companyRoutes = new Elysia({ prefix: "/api/company" })
           userCompanies[0].company.stripeSubscriptionId &&
           userCompanies[0].company.stripeCurrentPeriodEnd &&
           new Date(userCompanies[0].company.stripeCurrentPeriodEnd) > new Date(),
-        members,
+        admins,
       },
     };
   })

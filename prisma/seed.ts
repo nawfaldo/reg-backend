@@ -2,20 +2,34 @@
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const adapter = new PrismaLibSql({ url: process.env.DATABASE_URL || "file:./dev.db" });
-const prisma = new PrismaClient({ adapter });
+const isLocal = process.env.USE_LOCAL_DB === "true";
+
+let prisma: PrismaClient;
+
+if (isLocal) {
+  const adapter = new PrismaLibSql({ 
+    url: process.env.LOCAL_DATABASE_URL || "file:./dev.db" 
+  });
+  prisma = new PrismaClient({ adapter });
+} else {
+  const adapter = new PrismaLibSql({ 
+    url: process.env.TURSO_DATABASE_URL || "",
+    authToken: process.env.TURSO_AUTH_TOKEN || "",
+  });
+  prisma = new PrismaClient({ adapter });
+}
 
 const DEFAULT_PERMISSIONS = [
   // member
-  { id: "1.1.1", name: "member:role:view", desc: "Melihat daftar peran" },
-  { id: "1.1.2", name: "member:role:create", desc: "Membuat peran baru" },
-  { id: "1.1.3", name: "member:role:update", desc: "Mengubah peran yang ada" },
-  { id: "1.1.4", name: "member:role:delete", desc: "Menghapus peran" },
-  { id: "1.2.1", name: "member:user:view", desc: "Melihat daftar anggota" },
-  { id: "1.2.2", name: "member:user:create", desc: "Menambahkan anggota baru" },
-  { id: "1.2.3", name: "member:user:update", desc: "Mengubah peran anggota" },
-  { id: "1.2.4", name: "member:user:delete", desc: "Menghapus anggota" },
-  { id: "1.3.1", name: "member:permission:view", desc: "Melihat daftar perizinan" },
+  { id: "1.1.1", name: "admin:role:view", desc: "Melihat daftar peran" },
+  { id: "1.1.2", name: "admin:role:create", desc: "Membuat peran baru" },
+  { id: "1.1.3", name: "admin:role:update", desc: "Mengubah peran yang ada" },
+  { id: "1.1.4", name: "admin:role:delete", desc: "Menghapus peran" },
+  { id: "1.2.1", name: "admin:user:view", desc: "Melihat daftar anggota" },
+  { id: "1.2.2", name: "admin:user:create", desc: "Menambahkan anggota baru" },
+  { id: "1.2.3", name: "admin:user:update", desc: "Mengubah peran anggota" },
+  { id: "1.2.4", name: "admin:user:delete", desc: "Menghapus anggota" },
+  { id: "1.3.1", name: "admin:permission:view", desc: "Melihat daftar perizinan" },
 ];
 
 async function main() {

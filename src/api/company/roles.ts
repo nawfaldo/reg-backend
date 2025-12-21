@@ -21,7 +21,7 @@ export const roleRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canViewRoles = await hasPermission(session.user.id, params.id, "member:role:view");
+    const canViewRoles = await hasPermission(session.user.id, params.id, "admin:role:view");
     if (!canViewRoles) {
       set.status = 403;
       return { error: "You don't have permission to view roles" };
@@ -56,7 +56,7 @@ export const roleRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canViewRoles = await hasPermission(session.user.id, params.id, "member:role:view");
+    const canViewRoles = await hasPermission(session.user.id, params.id, "admin:role:view");
     if (!canViewRoles) {
       set.status = 403;
       return { error: "You don't have permission to view roles" };
@@ -111,7 +111,7 @@ export const roleRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canCreateRole = await hasPermission(session.user.id, params.id, "member:role:create");
+      const canCreateRole = await hasPermission(session.user.id, params.id, "admin:role:create");
       if (!canCreateRole) {
         set.status = 403;
         return { error: "You don't have permission to create roles" };
@@ -181,7 +181,7 @@ export const roleRoutes = new Elysia()
         return { error: "Company not found or access denied" };
       }
 
-      const canUpdateRole = await hasPermission(session.user.id, params.id, "member:role:update");
+      const canUpdateRole = await hasPermission(session.user.id, params.id, "admin:role:update");
       if (!canUpdateRole) {
         set.status = 403;
         return { error: "You don't have permission to update roles" };
@@ -271,7 +271,7 @@ export const roleRoutes = new Elysia()
       return { error: "Company not found or access denied" };
     }
 
-    const canDeleteRole = await hasPermission(session.user.id, params.id, "member:role:delete");
+    const canDeleteRole = await hasPermission(session.user.id, params.id, "admin:role:delete");
     if (!canDeleteRole) {
       set.status = 403;
       return { error: "You don't have permission to delete roles" };
