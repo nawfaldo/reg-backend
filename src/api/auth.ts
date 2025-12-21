@@ -55,7 +55,8 @@ export const auth = betterAuth({
   },
   baseURL: `${process.env.SERVER_URL}`,
   trustedOrigins: [
-    process.env.CLIENT_WEBSITE_URL!
+    process.env.CLIENT_WEBSITE_URL!,
+    "https://*.vercel.app"
   ],
   advanced: {
     defaultCookieAttributes: {

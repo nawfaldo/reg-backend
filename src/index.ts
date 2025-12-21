@@ -10,10 +10,10 @@ import { meRoutes } from "./api/me";
 export default new Elysia() 
   .use(
     cors({
-      origin: [`${process.env.CLIENT_WEBSITE_URL}`],
+      origin: true,
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"], 
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     }),
   )
   .options("*", () => new Response(null, { status: 204 }))
